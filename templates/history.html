@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Q&A History</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .history-container {
+            max-width: 800px;
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow-y: scroll;
+            max-height: 80vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .qanda {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .back-button {
+            padding: 10px 20px;
+            margin-top: 20px;
+            display: inline-block;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-around;
+        }
+    </style>
+</head>
+<body>
+    <div class="history-container">
+        <h1>Q&A History</h1>
+        {% for qanda in qandas %}
+            <div class="qanda">
+                <p><strong>質問:</strong> {{ qanda.question }}</p>
+                <p><strong>回答:</strong> {{ qanda.answer }}</p>
+            </div>
+        {% endfor %}
+        <div class="nav-buttons">
+            <a href="/" class="back-button">トップページに戻る</a>
+            <a href="/questioner" class="back-button">質問者画面に戻る</a>
+            <a href="/answer" class="back-button">回答者画面に戻る</a>
+        </div>
+    </div>
+</body>
+</html>

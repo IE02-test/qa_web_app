@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>回答者画面</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .answer-container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .question {
+            margin-bottom: 10px;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .answer-input {
+            width: calc(100% - 100px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .answer-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .answer-button:hover {
+            background-color: #0056b3;
+        }
+
+        .nav-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="answer-container">
+        <h1>回答者画面</h1>
+        {% for question in questions %}
+            <div class="question">
+                <p><strong>質問:</strong> {{ question.question }}</p>
+                <input data-id="{{ question.id }}" class="answer-input" type="text" placeholder="回答を入力してください">
+                <button class="answer-button">送信</button>
+            </div>
+        {% endfor %}
+        <br>
+        <a href="/" class="nav-button">トップページに戻る</a>
+        <a href="/history" class="nav-button">過去の質問と回答を見る</a>
+    </div>
+
+    <script>
+        document.querySelectorAll('.answer-button').forEach(button => {
+            button.addEventListener('click', function() {
+                var input = this.previousElementSibling;
+                var question_id = input.getAttribute('data-id');
+                var answer = input.value;
+
+                if (answer.trim() === '') {
+                    return;
+                }
+
+                // Send answer to the server
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/submit_answer', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.status === 'success') {
+                            input.value = '';
+                            alert('回答が送信されました');
+                            location.reload();  // ページをリロードして、画面から質問を消す
+                        }
+                    }
+                }.bind(this); // Bind the button to the function to remove it
+                xhr.send('question_id=' + encodeURIComponent(question_id) + '&answer=' + encodeURIComponent(answer));
+            });
+        });
+    </script>
+</body>
+</html>

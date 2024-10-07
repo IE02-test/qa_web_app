@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>質問者画面</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .messages li {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+
+        .messages .user {
+            background: #007BFF;
+            color: white;
+            text-align: right;
+        }
+
+        .messages .bot {
+            background: #f1f1f1;
+            color: #333;
+        }
+
+        .chat-input {
+            width: calc(100% - 100px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .chat-button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .chat-button:hover {
+            background-color: #0056b3;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .confirm-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .confirm-button:hover {
+            background-color: #388E3C;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>質問者画面</h1>
+        <ul id="messages" class="messages"></ul>
+        <button id="toggle-select-button" class="chat-button">選択</button>
+        <button id="toggle-input-button" class="chat-button">自由入力</button>
+        <br>
+        <div id="select-container">
+            <select id="question-select" class="chat-input">
+                <option value="" selected>質問を選択してください...</option>
+                {% for question in questions %}
+                    <option value="{{ question }}">{{ question }}</option>
+                {% endfor %}
+            </select>
+            <button id="chat-button" class="chat-button">送信</button>
+        </div>
+        <div id="input-container" class="hidden">
+            <input id="new-question-input" class="chat-input" type="text" placeholder="新しい質問を入力してください">
+            <button id="new-question-button" class="chat-button">送信</button>
+        </div>
+        <br>
+        <button onclick="window.location.href='/history'" class="chat-button">過去の質問と回答を見る</button>
+        <button onclick="window.location.href='/'" class="chat-button">トップページに戻る</button>
+    </div>
+
+    <script>
+        document.getElementById('toggle-select-button').addEventListener('click', function() {
+            document.getElementById('select-container').classList.remove('hidden');
+            document.getElementById('input-container').classList.add('hidden');
+        });
+
+        document.getElementById('toggle-input-button').addEventListener('click', function() {
+            document.getElementById('select-container').classList.add('hidden');
+            document.getElementById('input-container').classList.remove('hidden');
+        });
+
+        document.getElementById('chat-button').addEventListener('click', function() {
+            var select = document.getElementById('question-select');
+            var question = select.value;
+            var messages = document.getElementById('messages');
+
+            if (question.trim() === '') {
+                return;
+            }
+
+            // Display user's question
+            var userMessage = document.createElement('li');
+            userMessage.className = 'user';
+            userMessage.textContent = question;
+            messages.appendChild(userMessage);
+            select.value = '';
+
+            // Send question to the server
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/get_answer', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    // Display bot's answer
+                    var botMessage = document.createElement('li');
+                    botMessage.className = 'bot';
+                    botMessage.innerHTML = response.answer + ' <button class="confirm-button" data-id="' + response.question_id + '">確認済み</button>';
+                    messages.appendChild(botMessage);
+                    messages.scrollTop = messages.scrollHeight;
+                }
+            };
+            xhr.send('question=' + encodeURIComponent(question));
+        });
+
+        document.getElementById('new-question-button').addEventListener('click', function() {
+            var input = document.getElementById('new-question-input');
+            var question = input.value;
+            var messages = document.getElementById('messages');
+
+            if (question.trim() === '') {
+                return;
+            }
+
+            // Display user's question
+            var userMessage = document.createElement('li');
+            userMessage.className = 'user';
+            userMessage.textContent = question;
+            messages.appendChild(userMessage);
+            input.value = '';
+
+            // Send question to the server
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/submit_question', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    // Optionally handle response
+                    location.reload();  // ページをリロード
+                }
+            };
+            xhr.send('question=' + encodeURIComponent(question));
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.className == 'confirm-button') {
+                var questionId = e.target.getAttribute('data-id');
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/confirm_answer', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.status === 'success') {
+                            location.reload();  // ページをリロードして、回答を見えなくする
+                        }
+                    }
+                };
+                xhr.send('question_id=' + encodeURIComponent(questionId));
+            }
+        });
+    </script>
+</body>
+</html>
